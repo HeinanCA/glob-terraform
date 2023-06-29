@@ -14,16 +14,19 @@ data "aws_ssm_parameter" "amzn2_linux" {
 resource "aws_vpc" "app" {
     cidr_block = var.vpc_cidr_block
     enable_dns_hostnames = var.enable_dns_hostnames
+    tags = local.common_tags
 }
 
 resource "aws_internet_gateway" "app" {
     vpc_id = aws_vpc.app.id
+    tags = local.common_tags
 }
 
 resource "aws_subnet" "public_subnet" {
     vpc_id = aws_vpc.app.id
     cidr_block = var.subnet_cidr_block
     map_public_ip_on_launch = var.map_public_ip_on_launch
+    tags = local.common_tags
 }
 
 resource "aws_route_table" "public_route_table" {
@@ -32,6 +35,7 @@ resource "aws_route_table" "public_route_table" {
         cidr_block = "0.0.0.0/0"
         gateway_id = aws_internet_gateway.app.id
     }
+    tags = local.common_tags
 }
 
 resource "aws_route_table_association" "public_route_table_association" {
@@ -44,6 +48,7 @@ resource "aws_security_group" "nginx" {
     name = "nginx"
     description = "Allow HTTP and SSH inbound traffic"
     vpc_id = aws_vpc.app.id
+    tags = local.common_tags
     ingress {
         description = "HTTP"
         from_port = 80
@@ -67,14 +72,17 @@ resource "aws_security_group" "nginx" {
 }
 
 # EC2 #
-resource "aws_instance" "my_instance" {
+resource "aws_instance" "web_server" {
     ami = nonsensitive(data.aws_ssm_parameter.amzn2_linux.value)
     instance_type = var.instance_sizes["micro"]
     vpc_security_group_ids = [aws_security_group.nginx.id]
     subnet_id = aws_subnet.public_subnet.id
     associate_public_ip_address = true
     tags = {
-        Name = "my_instance"
+        Name = "HeinanAwesomeInstance"
+        Company = local.common_tags.Company
+        Project = local.common_tags.Project
+        BillingCode = local.common_tags.BillingCode
     }
     
     user_data = <<-EOF

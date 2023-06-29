@@ -4,6 +4,16 @@ variable "aws_access_key" {
     sensitive = true
 }
 
+variable "Company" {
+    type = string
+    description = "Company name for the instance"
+}
+
+variable "BillingCode" {
+    type = string
+    description = "Billing code for the instance (resouce tagging)"
+}
+
 variable "aws_secret_key" {
     type = string
     description = "Our AWS secret key"
