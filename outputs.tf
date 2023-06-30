@@ -1,4 +1,4 @@
-output "public_dns_hostname" {
-  value       = "http://${aws_instance.web_server.public_dns}"
-  description = "Our NGINX server's public DNS hostname"
+output "public_load_balancer_dns" {
+  value       = "http://${aws_lb.nginx_lb.dns_name}"
+  description = "Our NGINX server's public DNS hostname (behind the load balancer!)"
 }

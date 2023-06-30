@@ -49,10 +49,10 @@ variable "enable_dns_hostnames" {
   default     = true
 }
 
-variable "subnet_cidr_block" {
-  type        = string
-  description = "value of the subnet CIDR block"
-  default     = "10.0.0.0/24"
+variable "subnets_cidr_block" {
+  type        = list(string)
+  description = "value of the Public Subnets CIDR block"
+  default     = ["10.0.0.0/24", "10.0.1.0/24"]
 }
 
 variable "map_public_ip_on_launch" {
