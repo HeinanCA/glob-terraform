@@ -1,0 +1,9 @@
+**/.terraform
+**/.terraform.lock.hcl
+**/terraform.tfstate
+**/terraform.tfstate.*
+**/terraform.tfvars
+**/terraform-provider-*
+**/terraform-providers.tf
+**/terraform.tfplan
+**/terraform.rc
