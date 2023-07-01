@@ -1,3 +1,6 @@
+# aws_elb_service_account
+data "aws_elb_service_account" "main" {}
+
 # there goes aws_lb
 resource "aws_lb" "nginx_lb" {
   name               = "global-nginx-lb"
@@ -5,8 +8,15 @@ resource "aws_lb" "nginx_lb" {
   load_balancer_type = "application"
   security_groups    = [aws_security_group.nginx_elb_sg.id]
   subnets            = [aws_subnet.public_subnet_one.id, aws_subnet.public_subnet_two.id]
+  depends_on         = [aws_s3_bucket.s3]
 
   enable_deletion_protection = false
+
+  access_logs {
+    bucket  = aws_s3_bucket.s3.bucket
+    enabled = true
+    prefix  = "nginx-lb"
+  }
 
   tags = local.common_tags
 }
