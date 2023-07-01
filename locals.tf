@@ -5,3 +5,8 @@ locals {
     BillingCode = var.BillingCode
   }
 }
+
+resource "random_integer" "s3_seed_generator" {
+  min = 10000
+  max = 99999
+}
