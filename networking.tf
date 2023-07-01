@@ -9,7 +9,7 @@ data "aws_availability_zones" "available" {
 resource "aws_vpc" "app" {
   cidr_block           = var.vpc_cidr_block
   enable_dns_hostnames = var.enable_dns_hostnames
-  tags                 = local.common_tags
+  tags                 = merge(local.common_tags, { Name = "${local.naming_prefix}-vpc" })
 }
 
 resource "aws_internet_gateway" "app" {
@@ -17,20 +17,13 @@ resource "aws_internet_gateway" "app" {
   tags   = local.common_tags
 }
 
-resource "aws_subnet" "public_subnet_one" {
+resource "aws_subnet" "public_subnets" {
+  count                   = var.num_of_public_subnets
   vpc_id                  = aws_vpc.app.id
-  cidr_block              = var.subnets_cidr_block[0]
+  cidr_block              = cidrsubnet(var.vpc_cidr_block, 8, count.index)
   map_public_ip_on_launch = var.map_public_ip_on_launch
   tags                    = local.common_tags
-  availability_zone       = data.aws_availability_zones.available.names[0]
-}
-
-resource "aws_subnet" "public_subnet_two" {
-  vpc_id                  = aws_vpc.app.id
-  cidr_block              = var.subnets_cidr_block[1]
-  map_public_ip_on_launch = var.map_public_ip_on_launch
-  tags                    = local.common_tags
-  availability_zone       = data.aws_availability_zones.available.names[1]
+  availability_zone       = data.aws_availability_zones.available.names[count.index]
 }
 
 resource "aws_route_table" "public_route_table" {
@@ -42,19 +35,15 @@ resource "aws_route_table" "public_route_table" {
   tags = local.common_tags
 }
 
-resource "aws_route_table_association" "public_route_table_association_one" {
-  subnet_id      = aws_subnet.public_subnet_one.id
-  route_table_id = aws_route_table.public_route_table.id
-}
-
-resource "aws_route_table_association" "public_route_table_association_two" {
-  subnet_id      = aws_subnet.public_subnet_two.id
+resource "aws_route_table_association" "public_route_table_associations" {
+  count          = var.num_of_public_subnets
+  subnet_id      = aws_subnet.public_subnets[count.index].id
   route_table_id = aws_route_table.public_route_table.id
 }
 
 # SECURITY GROUPS FOR ELB #
 resource "aws_security_group" "nginx_elb_sg" {
-  name        = "nginx_alb_sg"
+  name        = "${local.naming_prefix}-nginx-elb-sg"
   description = "Allow HTTP and SSH inbound traffic"
   vpc_id      = aws_vpc.app.id
   tags        = local.common_tags
@@ -82,7 +71,7 @@ resource "aws_security_group" "nginx_elb_sg" {
 
 # SECURITY GROUPS #
 resource "aws_security_group" "nginx" {
-  name        = "nginx_sg"
+  name        = "${local.naming_prefix}-nginx-sg"
   description = "Allow HTTP and SSH inbound traffic"
   vpc_id      = aws_vpc.app.id
   tags        = local.common_tags

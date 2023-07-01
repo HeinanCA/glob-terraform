@@ -2,10 +2,11 @@ locals {
   common_tags = {
     Company     = var.Company
     Project     = "${var.Company}-NewCI/CD"
+    Environment = var.environment
     BillingCode = var.BillingCode
   }
-
-  s3_bucket_name = "${var.Company}-new-cicd-${random_integer.s3_seed_generator.result}"
+  naming_prefix = "${var.Company}-${var.environment}"
+  s3_bucket_name = lower("${local.naming_prefix}-${random_integer.s3_seed_generator.result}")
 }
 
 resource "random_integer" "s3_seed_generator" {

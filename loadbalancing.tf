@@ -7,7 +7,7 @@ resource "aws_lb" "nginx_lb" {
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.nginx_elb_sg.id]
-  subnets            = [aws_subnet.public_subnet_one.id, aws_subnet.public_subnet_two.id]
+  subnets            = [aws_subnet.public_subnets[*].id]
   depends_on         = [aws_s3_bucket.s3]
 
   enable_deletion_protection = false
@@ -18,7 +18,9 @@ resource "aws_lb" "nginx_lb" {
     prefix  = "nginx-lb"
   }
 
-  tags = local.common_tags
+  tags = merge(local.common_tags, {
+    Name = "${local.naming_prefix}-nginx-lb"
+  })
 }
 
 # there goes aws_lb_target_group
@@ -42,13 +44,8 @@ resource "aws_lb_listener" "nginx_lb_listener" {
 
 # there goes aws_lb_target_group_attachment
 resource "aws_lb_target_group_attachment" "nginx_lb_tg_attachment_one" {
+  count            = var.num_of_public_subnets
   target_group_arn = aws_lb_target_group.nginx_lb_tg.arn
-  target_id        = aws_instance.web_server_one.id
-  port             = 80
-}
-
-resource "aws_lb_target_group_attachment" "nginx_lb_tg_attachment_two" {
-  target_group_arn = aws_lb_target_group.nginx_lb_tg.arn
-  target_id        = aws_instance.web_server_two.id
+  target_id        = aws_instance.web_servers[count.index].id
   port             = 80
 }

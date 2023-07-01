@@ -60,3 +60,27 @@ variable "map_public_ip_on_launch" {
   description = "map public IP on launch?"
   default     = true
 }
+
+variable "num_of_public_subnets" {
+  type        = number
+  description = "How many subnets would you like?"
+  default     = 2
+}
+
+variable "num_of_instances" {
+  type        = number
+  description = "How many EC2 instances would you like?"
+  default     = 2
+}
+
+variable "naming_prefix" {
+  type = string
+  description = "value of the naming prefix"
+  default = "HeinanCA-dev"
+}
+
+variable "environment" {
+  type = string
+  description = "Which environment is this?"
+  default = "prod"
+}

@@ -1,6 +1,6 @@
 # aws_s3_bucket
 resource "aws_s3_bucket" "s3" {
-  bucket = local.s3_bucket_name
+  bucket        = local.s3_bucket_name
   force_destroy = true
 }
 
@@ -45,23 +45,14 @@ resource "aws_s3_bucket_policy" "allow_access_from_another_account" {
 
 # aws_s3_object
 resource "aws_s3_object" "s3_index" {
-  bucket = aws_s3_bucket.s3.bucket
-  key    = "index.html"
-  source = "website/index.html"
+  for_each = fileset("${path.module}/website", "**") # could use ** instead for a recursive search
+  bucket   = aws_s3_bucket.s3.bucket
+  key      = each.value
+  source   = "${path.module}/${each.value}"
+
 
   # The filemd5() function is available in Terraform 0.11.12 and later
   # For Terraform 0.11.11 and earlier, use the md5() function and the file() function:
   # etag = "${md5(file("path/to/file"))}"
-  etag = filemd5("website/index.html")
-}
-
-resource "aws_s3_object" "s3_logo" {
-  bucket = aws_s3_bucket.s3.bucket
-  key    = "Globo_logo_Vert.png"
-  source = "website/Globo_logo_Vert.png"
-
-  # The filemd5() function is available in Terraform 0.11.12 and later
-  # For Terraform 0.11.11 and earlier, use the md5() function and the file() function:
-  # etag = "${md5(file("path/to/file"))}"
-  etag = filemd5("website/Globo_logo_Vert.png")
+  etag = filemd5("${path.module}/${each.value}")
 }
