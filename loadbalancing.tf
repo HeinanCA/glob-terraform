@@ -7,13 +7,13 @@ resource "aws_lb" "nginx_lb" {
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.nginx_elb_sg.id]
-  subnets            = aws_subnet.public_subnets[*].id
-  depends_on         = [aws_s3_bucket.s3]
+  subnets            = module.app.public_subnets
+  depends_on         = [module.s3_module.s3_bucket]
 
   enable_deletion_protection = false
 
   access_logs {
-    bucket  = aws_s3_bucket.s3.bucket
+    bucket  = module.s3_module.s3_bucket.id
     enabled = true
     prefix  = "nginx-lb"
   }
@@ -28,7 +28,7 @@ resource "aws_lb_target_group" "nginx_lb_tg" {
   name     = "global-nginx-lb-tg"
   port     = 80
   protocol = "HTTP"
-  vpc_id   = aws_vpc.app.id
+  vpc_id   = module.app.vpc_id
 }
 # there goes aws_lb_listener
 resource "aws_lb_listener" "nginx_lb_listener" {

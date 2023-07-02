@@ -6,46 +6,29 @@ data "aws_availability_zones" "available" {
 # RESOURCES
 
 # NETWORK #
-resource "aws_vpc" "app" {
-  cidr_block           = var.vpc_cidr_block
-  enable_dns_hostnames = var.enable_dns_hostnames
-  tags                 = merge(local.common_tags, { Name = "${local.naming_prefix}-vpc" })
-}
+module "app" {
+  source  = "terraform-aws-modules/vpc/aws"
+  version = "5.0.0"
 
-resource "aws_internet_gateway" "app" {
-  vpc_id = aws_vpc.app.id
-  tags   = local.common_tags
-}
+  cidr = var.vpc_cidr_block
+  azs  = slice(data.aws_availability_zones.available.names, 0, var.num_of_public_subnets)
 
-resource "aws_subnet" "public_subnets" {
-  count                   = var.num_of_public_subnets
-  vpc_id                  = aws_vpc.app.id
-  cidr_block              = cidrsubnet(var.vpc_cidr_block, 8, count.index)
+  public_subnets = [for subnet in range(var.num_of_public_subnets) : cidrsubnet(var.vpc_cidr_block, 8, subnet)]
+
+  enable_nat_gateway = false
+  enable_vpn_gateway = false
+
   map_public_ip_on_launch = var.map_public_ip_on_launch
-  tags                    = local.common_tags
-  availability_zone       = data.aws_availability_zones.available.names[count.index]
-}
+  enable_dns_hostnames    = var.enable_dns_hostnames
 
-resource "aws_route_table" "public_route_table" {
-  vpc_id = aws_vpc.app.id
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.app.id
-  }
-  tags = local.common_tags
-}
-
-resource "aws_route_table_association" "public_route_table_associations" {
-  count          = var.num_of_public_subnets
-  subnet_id      = aws_subnet.public_subnets[count.index].id
-  route_table_id = aws_route_table.public_route_table.id
+  tags = merge(local.common_tags, { Name = "${local.naming_prefix}-vpc" })
 }
 
 # SECURITY GROUPS FOR ELB #
 resource "aws_security_group" "nginx_elb_sg" {
   name        = "${local.naming_prefix}-nginx-elb-sg"
   description = "Allow HTTP and SSH inbound traffic"
-  vpc_id      = aws_vpc.app.id
+  vpc_id      = module.app.vpc_id
   tags        = local.common_tags
   ingress {
     description = "HTTP"
@@ -73,7 +56,7 @@ resource "aws_security_group" "nginx_elb_sg" {
 resource "aws_security_group" "nginx" {
   name        = "${local.naming_prefix}-nginx-sg"
   description = "Allow HTTP and SSH inbound traffic"
-  vpc_id      = aws_vpc.app.id
+  vpc_id      = module.app.vpc_id
   tags        = local.common_tags
   ingress {
     description = "HTTP"
