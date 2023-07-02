@@ -74,13 +74,13 @@ variable "num_of_instances" {
 }
 
 variable "naming_prefix" {
-  type = string
+  type        = string
   description = "value of the naming prefix"
-  default = "HeinanCA-dev"
+  default     = "HeinanCA-dev"
 }
 
 variable "environment" {
-  type = string
+  type        = string
   description = "Which environment is this?"
-  default = "prod"
+  default     = "prod"
 }

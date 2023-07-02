@@ -45,14 +45,8 @@ resource "aws_s3_bucket_policy" "allow_access_from_another_account" {
 
 # aws_s3_object
 resource "aws_s3_object" "s3_index" {
-  for_each = fileset("${path.module}/website", "**") # could use ** instead for a recursive search
+  for_each = fileset("${path.module}", "website/**") # could use ** instead for a recursive search
   bucket   = aws_s3_bucket.s3.bucket
   key      = each.value
   source   = "${path.module}/${each.value}"
-
-
-  # The filemd5() function is available in Terraform 0.11.12 and later
-  # For Terraform 0.11.11 and earlier, use the md5() function and the file() function:
-  # etag = "${md5(file("path/to/file"))}"
-  etag = filemd5("${path.module}/${each.value}")
 }
