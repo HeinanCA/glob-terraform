@@ -8,7 +8,7 @@ data "aws_availability_zones" "available" {
 # NETWORK #
 module "app" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "5.0.0"
+  version = "5.1.1"
 
   cidr = var.vpc_cidr_block
   azs  = slice(data.aws_availability_zones.available.names, 0, var.num_of_public_subnets)
